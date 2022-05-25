@@ -1,70 +1,58 @@
 '''Server Code'''
-import socket
-from _thread import *
-import sys
+import socket   
+import threading
 
-server = "192.168.100.68"
+
+host = '127.0.0.1'
 port = 55555
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-try:
-    s.bind((server,port))
-except socket.error as e:
-    str(e)
+server.bind((host, port))
+server.listen()
+print(f"Server running on {host}:{port}")
 
-s.listen()
 
-print("Waiting for a connection, Server Started")
+clients = []
+usernames = []
 
-def threaded_client(conn, player):
-    conn.send(str.encode("Connected"))
-    reply = ""
-    nameincoming = False
-    playername = ""
-    messincoming = False
-    connected = True
-    while connected:
+def broadcast(message, _client):
+    for client in clients:
+        if client != _client:
+            client.send(message)
+
+def handle_messages(client):
+    while True:
         try:
-            data = conn.recv(2048).decode()
-
-            if not data:
-                print("Disconnected")
-                break
-            elif data == "Closing Connection":
-                print(str(addr[0]) + " Closed Connection")
-                connected = False
-            elif nameincoming == True:
-                reply = "Name Received"
-                print(str(player), " Player Name: ", data)
-                playname = data
-                nameincoming = False
-            elif messincoming == True:
-                reply = "Received"
-                print("Message Received: ", data)
-                conn.sendall(str.encode((str(playername) + " sended " + str(data))))
-                messincoming = False
-            elif data == "##":
-                print("Name in Coming")
-                conn.send(str.encode("Waiting for Message..."))
-                nameincoming = True
-            elif data == "//":
-                print("Mess in Coming")
-                messincoming = True
-            else:
-                reply = "Received"
-                print("Data Received: ", data)
-
+            message = client.recv(1024)
+            broadcast(message, client)
         except:
+            index = clients.index(client)
+            username = usernames[index]
+            broadcast(f"ChatBot: {username} disconnected".encode('utf-8'), client)
+            clients.remove(client)
+            usernames.remove(username)
+            client.close()
             break
 
-    print("Lost connection")
-    conn.close()
 
-currentPlayer = 0
+def receive_connections():
+    while True:
+        client, address = server.accept()
 
-while True:
-    conn, addr = s.accept()
-    print("Connected to:", addr)
-    start_new_thread(threaded_client, (conn, currentPlayer))
-    currentPlayer += 1
+        client.send("@username".encode("utf-8"))
+        username = client.recv(1024).decode('utf-8')
+
+        clients.append(client)
+        usernames.append(username)
+
+        print(f"{username} is connected with {str(address)}")
+
+        message = f"ChatBot: {username} joined the chat!".encode("utf-8")
+        broadcast(message, client)
+        client.send("Connected to server".encode("utf-8"))
+
+        thread = threading.Thread(target=handle_messages, args=(client,))
+        thread.start()
+
+receive_connections()

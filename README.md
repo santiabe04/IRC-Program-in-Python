@@ -1,5 +1,3 @@
-# TCP-Server-in-Python
+# Development Branch
 ## Description
-This is a school project. The idea is to create a LAN chat room
-## Libraries needed
-None
+This is the development branch where I program and test the code

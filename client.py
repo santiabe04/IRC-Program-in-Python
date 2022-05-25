@@ -10,8 +10,8 @@ port = 55555
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((host, port))
 
-
 def receive_messages():
+    '''Is to handle the received messages'''
     while True:
         try:
             message = client.recv(1024).decode('utf-8')
@@ -26,6 +26,7 @@ def receive_messages():
             break
 
 def write_messages():
+    '''Is to write in console'''
     while True:
         message = f"{username}: {input('')}"
         client.send(message.encode('utf-8'))

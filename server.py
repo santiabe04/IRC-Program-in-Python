@@ -2,7 +2,6 @@
 import socket   
 import threading
 
-
 host = '127.0.0.1'
 port = 55555
 
@@ -12,16 +11,17 @@ server.bind((host, port))
 server.listen()
 print(f"Server running on {host}:{port}")
 
-
 clients = []
 usernames = []
 
 def broadcast(message, _client):
+    '''Is to send a message to the clients'''
     for client in clients:
         if client != _client:
             client.send(message)
 
 def handle_messages(client):
+    '''Is to handle the received messages'''
     while True:
         try:
             message = client.recv(1024)
@@ -29,14 +29,15 @@ def handle_messages(client):
         except:
             index = clients.index(client)
             username = usernames[index]
+            print(f"{username} disconnected")
             broadcast(f"ChatBot: {username} disconnected".encode('utf-8'), client)
             clients.remove(client)
             usernames.remove(username)
             client.close()
             break
 
-
 def receive_connections():
+    '''Is to handle a new connection'''
     while True:
         client, address = server.accept()
 

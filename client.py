@@ -1,38 +1,37 @@
 '''Client Code'''
-import socket
+import socket   
+import threading
 
-class Client:
-    def __init__(self):
-        self.client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.server = '192.168.100.68'
-        self.port = 55555
-        self.address = self.server,self.port
-        self.pos = self.connect()
+username = input("Enter your username: ")
 
-    def getPos(self):
-        return self.pos
+host = '127.0.0.1'
+port = 55555
 
-    def connect(self):
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect((host, port))
+
+
+def receive_messages():
+    while True:
         try:
-            self.client.connect(self.address)
-            return self.client.recv(2048).decode()
+            message = client.recv(1024).decode('utf-8')
+
+            if message == "@username":
+                client.send(username.encode("utf-8"))
+            else:
+                print(message)
         except:
-            pass
+            print("An error Ocurred")
+            client.close
+            break
 
-    def send(self,data):
-        try:
-            self.client.send(str.encode(data))
-            return self.client.recv(2048).decode()
-        except socket.error as se:
-            print(se)
+def write_messages():
+    while True:
+        message = f"{username}: {input('')}"
+        client.send(message.encode('utf-8'))
 
-    def receive(self):
-        self.client.recv(2048).decode()
+receive_thread = threading.Thread(target=receive_messages)
+receive_thread.start()
 
-client = Client()
-
-while True:
-    sendmessage = input('Message: ')
-    client.send(sendmessage)
-    recvmessage = client.receive()
-    print(recvmessage)
+write_thread = threading.Thread(target=write_messages)
+write_thread.start()

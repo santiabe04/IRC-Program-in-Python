@@ -1,5 +1,5 @@
 '''Server Code'''
-import socket   
+import socket
 import threading
 
 host = '127.0.0.1'
@@ -14,6 +14,21 @@ print(f"Server running on {host}:{port}")
 clients = []
 usernames = []
 
+def ban_client(user):
+    '''Is to ban a client from server when an operator executes it'''
+    try:
+        index = usernames.index(user)
+        client = clients[index]
+        print(f"{user} disconnected")
+        broadcast(f"ChatBot: {user} disconnected".encode('utf-8'), client)
+        clients.remove(client)
+        usernames.remove(user)
+        client.close()
+        return True
+    except:
+        print("Client not found")
+        return False
+
 def broadcast(message, _client):
     '''Is to send a message to the clients'''
     for client in clients:
@@ -24,7 +39,15 @@ def handle_messages(client):
     '''Is to handle the received messages'''
     while True:
         try:
-            message = client.recv(1024)
+            message = client.recv(2048).decode('utf-8')
+            if message == "@ban":
+                client.send("@user".encode("utf-8"))
+                user = client.recv(2048).decode('utf-8')
+                result = ban_client(user)
+                if(result):
+                    client.send("Ban applied".encode("utf-8"))
+                else:
+                    client.send("Error during ban application".encode("utf-8"))
             broadcast(message, client)
         except:
             index = clients.index(client)
@@ -42,7 +65,7 @@ def receive_connections():
         client, address = server.accept()
 
         client.send("@username".encode("utf-8"))
-        username = client.recv(1024).decode('utf-8')
+        username = client.recv(2048).decode('utf-8')
 
         clients.append(client)
         usernames.append(username)

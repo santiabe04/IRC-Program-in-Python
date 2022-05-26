@@ -1,8 +1,9 @@
 '''Client Code'''
-import socket   
+import socket
 import threading
 
 username = input("Enter your username: ")
+user = input('User to ban: ')
 
 host = '127.0.0.1'
 port = 55555
@@ -14,10 +15,12 @@ def receive_messages():
     '''Is to handle the received messages'''
     while True:
         try:
-            message = client.recv(1024).decode('utf-8')
+            message = client.recv(2048).decode('utf-8')
 
             if message == "@username":
                 client.send(username.encode("utf-8"))
+            if message == "@user":
+                client.send(user.encode("utf-8"))
             else:
                 print(message)
         except:

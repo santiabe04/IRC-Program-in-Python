@@ -29,6 +29,7 @@ def handle_messages(client):
         except:
             index = clients.index(client)
             username = usernames[index]
+            print(f"{username} disconnected")
             broadcast(f"ChatBot: {username} disconnected".encode('utf-8'), client)
             clients.remove(client)
             usernames.remove(username)
